@@ -173,8 +173,8 @@ pub fn detect_provider_with_path(
         discover_antigravity()
     } else if provider == ProviderKey::Cline {
         discover_cline()
-    } else if provider == ProviderKey::OpenCode {
-        discover_opencode()
+    } else if supports_npm_runners(provider) {
+        discover_npm_runners(provider)
     } else {
         discover_command_installation(provider)
     };
@@ -431,37 +431,53 @@ fn discover_cline() -> Vec<ProviderInstallation> {
     installations
 }
 
-fn discover_opencode() -> Vec<ProviderInstallation> {
+/// npm ile kurulabilen ve Windows'ta `.cmd`/`.ps1` shim'i üzerinden çalışan provider'lar.
+/// `Command::new("<ad>")` bu shim'leri çözmediği için PATH dizinleri doğrudan taranır.
+fn supports_npm_runners(provider: ProviderKey) -> bool {
+    matches!(provider, ProviderKey::Codex | ProviderKey::OpenCode)
+}
+
+fn npm_runner_names(provider: ProviderKey) -> [String; 3] {
+    let command = provider.executable().unwrap_or_default();
+    ["exe", "cmd", "ps1"].map(|extension| format!("{command}.{extension}"))
+}
+
+fn discover_npm_runners(provider: ProviderKey) -> Vec<ProviderInstallation> {
     let Some(path) = env::var_os("PATH") else {
         return Vec::new();
     };
-    discover_opencode_in_path(env::split_paths(&path))
+    discover_npm_runners_in_path(provider, env::split_paths(&path))
 }
 
-fn discover_opencode_in_path(
+fn discover_npm_runners_in_path(
+    provider: ProviderKey,
     directories: impl IntoIterator<Item = PathBuf>,
 ) -> Vec<ProviderInstallation> {
+    let display_name = dna_render::provider_descriptor(provider.provider()).display_name;
     let mut installations = Vec::new();
     for directory in directories {
-        for file_name in ["opencode.exe", "opencode.cmd", "opencode.ps1"] {
-            let candidate = directory.join(file_name);
+        for file_name in npm_runner_names(provider) {
+            let candidate = directory.join(&file_name);
             if !regular_non_link_file(&candidate) {
                 continue;
             }
+            let is_executable = file_name.ends_with(".exe");
             installations.push(ProviderInstallation {
-                kind: if file_name == "opencode.exe" {
+                kind: if is_executable {
                     InstallationKind::Cli
                 } else {
                     InstallationKind::NpmShim
                 },
                 version: command_version_path(&candidate),
                 path: candidate,
-                source: match file_name {
-                    "opencode.exe" => "PATH üzerindeki OpenCode Windows executable",
-                    "opencode.cmd" => "PATH üzerindeki npm CMD shim; cmd.exe sürüm probe'u",
-                    _ => "PATH üzerindeki npm PowerShell shim; execution policy korunarak sürüm probe'u",
-                }
-                .to_owned(),
+                source: if is_executable {
+                    format!("PATH üzerindeki {display_name} Windows executable")
+                } else if file_name.ends_with(".cmd") {
+                    "PATH üzerindeki npm CMD shim; cmd.exe sürüm probe'u".to_owned()
+                } else {
+                    "PATH üzerindeki npm PowerShell shim; execution policy korunarak sürüm probe'u"
+                        .to_owned()
+                },
             });
         }
     }
@@ -532,10 +548,11 @@ fn validate_selected_installations(
             .then_some(installations)
             .ok_or_else(|| DeployError::InvalidProviderPath(selected.to_path_buf()));
     }
-    if provider == ProviderKey::OpenCode {
+    if supports_npm_runners(provider) {
+        let display_name = dna_render::provider_descriptor(provider.provider()).display_name;
         let installations = if selected.is_dir() {
-            discover_opencode_in_path([selected.to_path_buf()])
-        } else if regular_non_link_file(selected) && is_opencode_runner(selected) {
+            discover_npm_runners_in_path(provider, [selected.to_path_buf()])
+        } else if regular_non_link_file(selected) && is_npm_runner(provider, selected) {
             vec![ProviderInstallation {
                 kind: if selected
                     .extension()
@@ -548,8 +565,9 @@ fn validate_selected_installations(
                 },
                 version: command_version_path(selected),
                 path: selected.to_path_buf(),
-                source: "kullanıcı tarafından seçilen ve adı doğrulanan OpenCode çalıştırıcısı"
-                    .to_owned(),
+                source: format!(
+                    "kullanıcı tarafından seçilen ve adı doğrulanan {display_name} çalıştırıcısı"
+                ),
             }]
         } else {
             Vec::new()
@@ -602,13 +620,13 @@ fn validate_selected_installations(
     }])
 }
 
-fn is_opencode_runner(path: &Path) -> bool {
+fn is_npm_runner(provider: ProviderKey, path: &Path) -> bool {
     path.file_name()
         .and_then(|value| value.to_str())
         .is_some_and(|name| {
-            name.eq_ignore_ascii_case("opencode.exe")
-                || name.eq_ignore_ascii_case("opencode.cmd")
-                || name.eq_ignore_ascii_case("opencode.ps1")
+            npm_runner_names(provider)
+                .iter()
+                .any(|runner| name.eq_ignore_ascii_case(runner))
         })
 }
 
@@ -2051,7 +2069,7 @@ mod tests {
         fs::write(root.join("opencode.cmd"), b"@echo 9.8.7\r\n").unwrap();
         fs::write(root.join("opencode.ps1"), b"Write-Output '9.8.7'\r\n").unwrap();
 
-        let installations = discover_opencode_in_path([root.clone()]);
+        let installations = discover_npm_runners_in_path(ProviderKey::OpenCode, [root.clone()]);
 
         assert_eq!(installations.len(), 3);
         assert!(installations
@@ -2087,6 +2105,60 @@ mod tests {
         ));
         assert!(safe_cmd_version_invocation(Path::new("C:/safe/opencode.cmd")).is_some());
         assert!(safe_cmd_version_invocation(Path::new("C:/unsafe&path/opencode.cmd")).is_none());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn codex_discovers_windows_npm_shims_from_path() {
+        let root = temp_root("codex-path");
+        fs::write(root.join("codex.cmd"), b"@echo codex-cli 0.99.0\r\n").unwrap();
+        fs::write(
+            root.join("codex.ps1"),
+            b"Write-Output 'codex-cli 0.99.0'\r\n",
+        )
+        .unwrap();
+        // Uzantısız sh shim'i ve başka provider'ın shim'i Codex sayılmamalı.
+        fs::write(root.join("codex"), b"#!/bin/sh\n").unwrap();
+        fs::write(root.join("opencode.cmd"), b"@echo 1.0.0\r\n").unwrap();
+
+        let installations = discover_npm_runners_in_path(ProviderKey::Codex, [root.clone()]);
+
+        assert_eq!(installations.len(), 2);
+        assert!(installations
+            .iter()
+            .all(|item| item.kind == InstallationKind::NpmShim));
+        assert!(installations
+            .iter()
+            .any(|item| item.path.ends_with("codex.cmd")));
+        assert!(installations
+            .iter()
+            .any(|item| item.path.ends_with("codex.ps1")));
+        #[cfg(windows)]
+        assert!(installations.iter().any(|item| {
+            item.path.ends_with("codex.cmd") && item.version.as_deref() == Some("codex-cli 0.99.0")
+        }));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn selected_codex_cmd_shim_is_accepted_and_foreign_runner_rejected() {
+        let root = temp_root("codex-selected");
+        let runner = root.join("codex.cmd");
+        fs::write(&runner, b"@echo codex-cli 0.99.0\r\n").unwrap();
+        let detection = detect_provider_with_path(ProviderKey::Codex, Some(&runner)).unwrap();
+        assert!(detection.installed);
+        assert_eq!(detection.installations[0].kind, InstallationKind::NpmShim);
+        assert!(detection.installations[0].source.contains("Codex CLI"));
+
+        let from_dir = detect_provider_with_path(ProviderKey::Codex, Some(&root)).unwrap();
+        assert!(from_dir.installed);
+
+        let foreign = root.join("opencode.cmd");
+        fs::write(&foreign, b"@echo 1.0.0\r\n").unwrap();
+        assert!(matches!(
+            detect_provider_with_path(ProviderKey::Codex, Some(&foreign)),
+            Err(DeployError::InvalidProviderPath(_))
+        ));
         let _ = fs::remove_dir_all(root);
     }
 
