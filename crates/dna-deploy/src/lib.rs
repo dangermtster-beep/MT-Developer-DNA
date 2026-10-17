@@ -976,7 +976,6 @@ pub fn format_plan(plan: &InstallPlan) -> String {
             change.desired_sha256
         ));
     }
-    output.push_str("Dry-run varsayılandır; hiçbir dosya değiştirilmedi.\n");
     output
 }
 
@@ -2031,6 +2030,27 @@ mod tests {
             detect_provider_with_path(ProviderKey::Cline, Some(&invalid)),
             Err(DeployError::InvalidProviderPath(_))
         ));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn format_plan_lists_changes_without_claiming_apply_outcome() {
+        let root = temp_root("format-plan-outcome");
+        let profile = dna_core::Profile::load(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../profiles/universal.json"),
+        )
+        .unwrap();
+        let package = dna_render::render_package(&profile, Provider::Cline).unwrap();
+        let plan = plan_install(&root, &package, InstallScope::Project).unwrap();
+
+        let text = format_plan(&plan);
+
+        assert!(text.starts_with("Deployment planı: provider=cline"));
+        assert!(text.contains(".cline/skills/mt-developer-dna/SKILL.md"));
+        assert!(
+            !text.contains("değiştirilmedi") && !text.contains("Dry-run"),
+            "plan çıktısı uygulama sonucunu bilmez; sonucu çağıran yazmalı: {text}"
+        );
         let _ = fs::remove_dir_all(root);
     }
 

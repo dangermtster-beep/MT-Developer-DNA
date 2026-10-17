@@ -12,7 +12,7 @@ use dna_deploy::{
     doctor_with_installation_path as deploy_doctor, format_diagnostics,
     format_plan as format_deployment_plan, plan_install_with_global_skill_path as plan_deployment,
     resolve_target_root, rollback as rollback_deployment, status as deployment_status,
-    ConflictPolicy, DeployError, DiagnosticResult, InstallScope, ProviderKey,
+    ConflictPolicy, DeployError, DeploymentReport, DiagnosticResult, InstallScope, ProviderKey,
 };
 use dna_memory::{
     format_memory_plan, AuditSeverity, DecisionInput, InitRequest, MemoryBridge, MemoryError,
@@ -1636,16 +1636,12 @@ fn execute_deployment_plan(
         let package = render_package(&profile, provider)?;
         let plan = plan_deployment(&root, &package, scope, Some(&detection.global_skill_path))?;
         output.push_str(&format_deployment_plan(&plan));
-        if apply {
-            let report = apply_deployment(&plan, conflict.into())?;
-            output.push_str(&format!(
-                "Uygulandı: changed={}, unchanged={}, skipped={}, transaction={}\n",
-                report.changed,
-                report.unchanged,
-                report.skipped,
-                report.transaction_id.as_deref().unwrap_or("yok")
-            ));
-        }
+        let report = if apply {
+            Some(apply_deployment(&plan, conflict.into())?)
+        } else {
+            None
+        };
+        output.push_str(&deployment_outcome_line(report.as_ref()));
     }
     if !apply {
         output.push_str(
@@ -1653,6 +1649,20 @@ fn execute_deployment_plan(
         );
     }
     Ok(output)
+}
+
+/// Plan satırlarının altına gerçek sonucu yazar: uygulandıysa rapor, değilse dry-run bilgisi.
+fn deployment_outcome_line(report: Option<&DeploymentReport>) -> String {
+    match report {
+        Some(report) => format!(
+            "Uygulandı: changed={}, unchanged={}, skipped={}, transaction={}\n",
+            report.changed,
+            report.unchanged,
+            report.skipped,
+            report.transaction_id.as_deref().unwrap_or("yok")
+        ),
+        None => "Dry-run: bu provider için hiçbir dosya değiştirilmedi.\n".to_owned(),
+    }
 }
 
 const GLOBAL_SCOPE_NOTE: &str = "BİLGİ: Global kurulum projeden bağımsızdır; profildeki dil, arayüz ve veritabanı seçimi global skill'e yazılmadı. Dil her projede kullanıcıya sorulur ve `.mt-dna/` hafızasında tutulur.\n";
@@ -1826,7 +1836,9 @@ fn write_new_file(path: &Path, contents: &[u8]) -> Result<(), CliError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{profile_for_scope, Cli, InstallScope, Profile};
+    use super::{
+        deployment_outcome_line, profile_for_scope, Cli, DeploymentReport, InstallScope, Profile,
+    };
     use clap::{CommandFactory, Parser};
     use dna_core::ProgrammingLanguage;
     use dna_render::{render_package, Provider};
@@ -1948,6 +1960,24 @@ mod tests {
             assert!(!combined.contains("aynen koru: Rust"));
             assert!(combined.contains("Programlama dili seçilmedi"));
         }
+    }
+
+    #[test]
+    fn outcome_line_reports_apply_and_dry_run_truthfully() {
+        let report = DeploymentReport {
+            transaction_id: Some("tx-1".to_owned()),
+            changed: 1,
+            unchanged: 0,
+            skipped: 0,
+        };
+        let applied = deployment_outcome_line(Some(&report));
+        assert!(applied.starts_with("Uygulandı: changed=1"));
+        assert!(applied.contains("transaction=tx-1"));
+        assert!(!applied.contains("değiştirilmedi"));
+
+        let dry_run = deployment_outcome_line(None);
+        assert!(dry_run.starts_with("Dry-run"));
+        assert!(dry_run.contains("hiçbir dosya değiştirilmedi"));
     }
 
     #[test]
