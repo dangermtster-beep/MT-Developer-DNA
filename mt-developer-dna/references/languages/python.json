@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "python",
+  "display_name": "Python",
+  "aliases": ["py"],
+  "file_extensions": ["py", "pyi"],
+  "build_commands": ["python -m compileall ."],
+  "test_commands": ["python -m pytest"],
+  "release_commands": ["python -m build"],
+  "principles": ["Sıcak yollarda gereksiz nesne üretimini ölç.", "Paket ve sanal ortam sınırlarını açık tut."]
+}
+

@@ -1,0 +1,10 @@
+description = "MT Developer DNA yazılım geliştirme iş akışını başlatır."
+prompt = """
+Activate and follow the `mt-developer-dna` skill for this software task.
+Treat the project-local `.mt-dna/` directory as the provider-independent memory source.
+Preserve the user's chosen programming language and the existing architecture.
+Do not claim unsupported provider capabilities.
+
+User request:
+{{args}}
+"""

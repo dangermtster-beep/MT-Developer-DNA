@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "name": "Windows Rust Masaüstü",
+  "language": "Rust",
+  "ui": "Slint",
+  "database": "SQLite",
+  "features": {
+    "low_idle_cpu": true,
+    "low_memory": true,
+    "gpu_acceleration": false,
+    "i18n": true,
+    "default_locale": "tr-TR",
+    "supported_locales": ["tr-TR", "en-US"],
+    "theme": "System",
+    "tests_required": true,
+    "logging": true,
+    "log_level": "Info"
+  },
+  "standards": {
+    "architecture": [
+      "Dar kapsamlı ve geri alınabilir değişiklik yap.",
+      "I/O sınırlarını çekirdek iş mantığından ayır."
+    ],
+    "quality": [
+      "Her aşamada ilgili otomatik testleri çalıştır.",
+      "Derleyici uyarılarını açıkça değerlendir."
+    ],
+    "security": [
+      "Mevcut dosyayı açık onay olmadan değiştirme.",
+      "Gizli bilgileri kaynak koda veya loglara yazma."
+    ],
+    "performance_benchmarks": [
+      "Boşta CPU kullanımını benchmark ile ölç.",
+      "Bellek hedeflerini ölçüm hedefi olarak raporla, garanti verme."
+    ]
+  }
+}

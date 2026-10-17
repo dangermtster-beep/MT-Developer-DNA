@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "cpp",
+  "display_name": "C++",
+  "aliases": ["c++", "cplusplus"],
+  "file_extensions": ["cpp", "cc", "cxx", "h", "hpp"],
+  "build_commands": ["cmake --build build"],
+  "test_commands": ["ctest --test-dir build --output-on-failure"],
+  "release_commands": ["cmake --build build --config Release"],
+  "principles": ["Kaynak sahipliğinde RAII kullan.", "Tanımsız davranış ve yaşam süresi risklerini test et."]
+}
+

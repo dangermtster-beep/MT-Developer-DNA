@@ -1,0 +1,39 @@
+# Rust / local tooling
+/target/
+/.tooling/
+**/*.rs.bk
+
+# Local MT Developer DNA state, reports and backups
+/.mt-dna/
+/.mt-developer-dna/
+/.mt-dna-tmp-*
+**/.mt-dna/
+**/.mt-developer-dna/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.token
+credentials.json
+secrets.json
+
+# Editors, operating system and temporary files
+.idea/
+.vscode/
+*.user
+*.suo
+*.swp
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Generated release packages
+/dist/
+/release-staging/
+

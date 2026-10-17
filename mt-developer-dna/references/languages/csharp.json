@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "csharp",
+  "display_name": "C#",
+  "aliases": ["c#", "dotnet"],
+  "file_extensions": ["cs", "csproj", "sln"],
+  "build_commands": ["dotnet build"],
+  "test_commands": ["dotnet test"],
+  "release_commands": ["dotnet publish -c Release"],
+  "principles": ["IDisposable kaynaklarını deterministik kapat.", "async akışlarda gereksiz Task ve thread üretme."]
+}
+

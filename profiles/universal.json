@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "MT Developer DNA Universal",
+  "language": "ask_user",
+  "ui": "Auto",
+  "database": "Auto",
+  "features": {
+    "low_idle_cpu": true,
+    "low_memory": true,
+    "gpu_acceleration": false,
+    "i18n": true,
+    "default_locale": "tr-TR",
+    "supported_locales": ["tr-TR"],
+    "theme": "System",
+    "tests_required": true,
+    "logging": true,
+    "log_level": "Info"
+  },
+  "standards": {}
+}

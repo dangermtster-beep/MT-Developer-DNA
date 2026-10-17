@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "typescript",
+  "display_name": "TypeScript",
+  "aliases": ["ts"],
+  "file_extensions": ["ts", "tsx", "mts", "cts"],
+  "build_commands": ["Projenin kilit dosyasına uygun paket yöneticisiyle build scriptini çalıştır."],
+  "test_commands": ["Projenin kilit dosyasına uygun paket yöneticisiyle test scriptini çalıştır."],
+  "release_commands": ["Projenin tanımlı release veya package scriptini çalıştır."],
+  "principles": ["strict tür kontrolünü koru.", "Bundle boyutu ve event-loop bloklamasını ölç."]
+}

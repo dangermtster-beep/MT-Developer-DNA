@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "package": "mt-developer-dna",
+  "version": "0.7.0",
+  "provider": "codex",
+  "scope": "project",
+  "adapter_version": "0.7.0",
+  "files": [
+    {
+      "path": ".agents/skills/mt-developer-dna/SKILL.md",
+      "sha256": "EXAMPLE_SHA256_NOT_A_REAL_INSTALL_HASH"
+    }
+  ]
+}

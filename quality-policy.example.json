@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.5",
+  "required_checks": ["build", "tests", "security_critical"],
+  "warnings": ["format", "lint", "performance_regression"],
+  "performance": {
+    "regression_warning_percent": 15,
+    "minimum_repetitions": 3
+  },
+  "timeout_seconds": 600,
+  "max_output_kb_per_check": 512
+}

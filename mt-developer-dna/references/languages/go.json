@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "go",
+  "display_name": "Go",
+  "aliases": ["golang"],
+  "file_extensions": ["go"],
+  "build_commands": ["go build ./..."],
+  "test_commands": ["go test ./..."],
+  "release_commands": ["go build -trimpath ./..."],
+  "principles": ["Goroutine yaşam döngülerini iptal ve kapanışla sınırla.", "Hataları açıkça sar ve çağırana döndür."]
+}
+

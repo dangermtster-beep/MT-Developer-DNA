@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "java",
+  "display_name": "Java",
+  "aliases": ["jvm"],
+  "file_extensions": ["java", "gradle", "xml"],
+  "build_commands": ["Projenin mevcut Maven veya Gradle wrapper komutunu kullan."],
+  "test_commands": ["Mevcut wrapper üzerinden test görevini çalıştır."],
+  "release_commands": ["Mevcut wrapper üzerinden release paketini oluştur."],
+  "principles": ["Thread havuzlarını ve kapatılabilir kaynakları yönet.", "JVM bellek hedeflerini ölçümle doğrula."]
+}
+

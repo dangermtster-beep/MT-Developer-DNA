@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "rust",
+  "display_name": "Rust",
+  "aliases": ["rs"],
+  "file_extensions": ["rs"],
+  "build_commands": ["cargo check --workspace"],
+  "test_commands": ["cargo test --workspace"],
+  "release_commands": ["cargo build --workspace --release"],
+  "principles": ["Sahiplik ve yaşam süresi modelini açık tut.", "unsafe kullanımını gerekçelendir ve dar kapsamlı tut."]
+}
+

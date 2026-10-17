@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.6",
+  "project": "example-project",
+  "language": "rust",
+  "mode": "PREVIEW",
+  "timestamp_utc": "2026-10-16T00:00:00Z",
+  "scanned_files": 1,
+  "scan_truncated": false,
+  "findings": [
+    {
+      "finding_id": "finding-example",
+      "source": "lint",
+      "severity": "LOW",
+      "confidence": "HIGH",
+      "file": "src/main.rs",
+      "line_range": { "start": 1, "end": 1 },
+      "evidence": "ÖRNEK: bir satırda satır sonu boşluğu.",
+      "reproduction": "ÖRNEK dosyada trailing whitespace kontrolü.",
+      "proposed_fix": "Yalnız satır sonundaki boşluğu kaldır.",
+      "risk": "LOW",
+      "verification_steps": ["cargo test", "cargo fmt --check"],
+      "status": "PREVIEWED",
+      "auto_fixable": true
+    }
+  ],
+  "fix": null,
+  "notes": ["Bu dosya örnek şemadır; gerçek proje sonucu değildir."]
+}
