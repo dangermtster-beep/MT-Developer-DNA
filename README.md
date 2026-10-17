@@ -135,6 +135,7 @@ or install GitHub releases; see [docs/UPDATE.md](docs/UPDATE.md).
 
 - [Installation](docs/INSTALL.md)
 - [Usage](docs/USAGE.md)
+- [Command reference (Turkish)](docs/COMMANDS.md)
 - [Providers](docs/PROVIDERS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Performance](docs/PERFORMANCE.md)

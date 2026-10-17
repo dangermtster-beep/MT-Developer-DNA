@@ -108,6 +108,7 @@ onayı olmadan otomatik indirme veya kurulum yapılmaz. Ayrıntılar:
 ## Belgeler
 
 [Kurulum](docs/INSTALL.md) · [Kullanım](docs/USAGE.md) ·
+[Komut rehberi](docs/COMMANDS.md) ·
 [Provider'lar](docs/PROVIDERS.md) · [Mimari](docs/ARCHITECTURE.md) ·
 [Performans](docs/PERFORMANCE.md) · [Sorun giderme](docs/TROUBLESHOOTING.md)
 

@@ -2,7 +2,8 @@
 
 Komutlar Türkçe çıktı üretir. Tüm örnekler release paketi kökünde PowerShell için
 yazılmıştır; kaynak checkout'unda `.\dna-cli.exe` yerine
-`.\target\release\dna-cli.exe` kullanılabilir.
+`.\target\release\dna-cli.exe` kullanılabilir. Tüm skill ve CLI komutlarının
+toplu listesi [COMMANDS.md](COMMANDS.md) dosyasındadır.
 
 ## Profil ve provider keşfi
 
