@@ -4,7 +4,7 @@
 standartlarını uygulayan hafif bir Rust CLI ve taşınabilir Agent Skill sistemidir.
 Masaüstü uygulaması, daemon, watcher veya sürekli polling içermez.
 
-**MT SOFTWARE tarafından geliştirilmiştir.** Sürüm: **v0.8.0** — Lisans: **MIT**.
+**MT SOFTWARE tarafından geliştirilmiştir.** Sürüm: **v0.8.1** — Lisans: **MIT**.
 
 ## Temel özellikler
 
@@ -56,6 +56,23 @@ cargo test --workspace
 Codex çağrısı `$mt-developer-dna`, slash destekli adapter çağrısı
 `/mt-developer-dna` biçimindedir. Gerçek kabul için `doctor` ve provider içi
 doğrulama adımları uygulanmalıdır.
+
+## Bilgisayarda tüm provider'lar için kurulum
+
+CLI'yi PATH'e kurun, ardından algılanan tüm provider'lara global skill'i yükleyin:
+
+```powershell
+cargo install --path crates/dna-cli --locked
+dna-cli deploy sync --profile .\profiles\universal.json --provider all --scope global
+dna-cli deploy sync --profile .\profiles\universal.json --provider all --scope global --apply --yes
+dna-cli deploy status --scope global
+```
+
+- Global kurulum projeden bağımsızdır: profildeki dil, arayüz ve veritabanı
+  global skill'e yazılmaz. Skill dili önce projenin `.mt-dna/project.json`
+  dosyasından okur, kayıt yoksa kullanıcıya sorar.
+- Her skill, ayrıntılı sözleşmeleri içeren `references/` klasörüyle birlikte kurulur.
+- npm ile kurulan Codex ve OpenCode (`.cmd`/`.ps1` shim) otomatik algılanır.
 
 ## PLAN / BUILD / REVIEW
 

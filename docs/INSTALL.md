@@ -1,6 +1,6 @@
 # Kurulum
 
-Bu belge MT Developer DNA v0.8.0 içindir. Developed by MT SOFTWARE.
+Bu belge MT Developer DNA v0.8.1 içindir. Developed by MT SOFTWARE.
 
 ## Kaynaktan derleme
 
@@ -29,7 +29,8 @@ olarak `conflict` olur ve üzerine yazılmaz.
 
 ## Codex
 
-- Provider kurulumu: resmi Codex kurulumu tamamlanmalı ve `codex --version` çalışmalıdır.
+- Provider kurulumu: resmi Codex kurulumu tamamlanmalı ve `codex --version` çalışmalıdır. npm ile kurulan `codex.cmd`/`codex.ps1` shim'leri PATH üzerinde otomatik algılanır; gerekirse `--provider-path` ile açıkça seçilebilir.
+- Her kurulumda skill klasörünün yanına `references/` da yazılır. Global kurulum profildeki dil/arayüz/veritabanı seçimini skill'e gömmez.
 - Proje hedefi: `.agents/skills/mt-developer-dna/SKILL.md`.
 - Kullanıcı hedefi: `~/.agents/skills/mt-developer-dna/SKILL.md`.
 - Kurulum: `--provider codex --scope project` veya `--scope global`.

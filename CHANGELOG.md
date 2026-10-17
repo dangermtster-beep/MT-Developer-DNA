@@ -2,6 +2,24 @@
 
 MT Developer DNA, MT SOFTWARE tarafından geliştirilmektedir.
 
+## 0.8.1 — 2026-10-17
+
+- Skill açıklaması dilden bağımsız sabit metne çevrildi; `ask_user` profilinde
+  İngilizce açıklamaya sızan "Kullanıcı seçimi bekleniyor" yer tutucusu giderildi.
+- Global kurulum profili nötrler (dil `ask_user`, arayüz/veritabanı `Auto`);
+  dile özel profil artık her projeyi o dile kilitlemez. CLI bunu bildirir.
+- Skill, seçili dili önce `.mt-dna/project.json` içinden okur; kayıt yoksa sorar.
+- `mt-developer-dna/references/` tek kaynak oldu: içerik binary'ye gömülür ve
+  her provider'da skill klasörünün yanına `references/` olarak kurulur (global
+  ve Antigravity CLI özel yolu dahil). Ayrışan elle yazılmış `SKILL.md` kaldırıldı.
+- npm ile kurulan Codex (`codex.cmd`/`codex.ps1`) algılanır; `--provider-path`
+  bu shim'leri kabul eder.
+- `deploy sync --apply --yes` çıktısı artık "hiçbir dosya değiştirilmedi" demez;
+  her provider için gerçek sonucu yazar.
+- `dna-deploy` ve `dna-cli` büyük dosyaları davranış değiştirmeden modüllere bölündü.
+- Sürüme özel tarihçe belgeleri `docs/history/` altına taşındı; Windows paketleme
+  betiği yeni yapıya ve sürüme göre güncellendi.
+
 ## 0.8.0 — 2026-10-17
 
 - MT SOFTWARE marka, MIT lisans, iki dilli README, açık kaynak katkı/güvenlik
@@ -15,7 +33,7 @@ MT Developer DNA, MT SOFTWARE tarafından geliştirilmektedir.
   Insiders, profil paket deposu, `VSCODE_EXTENSIONS` ve özel extension köklerini destekleyecek biçimde düzeltildi.
 - OpenCode discovery Windows PATH üzerindeki native `.exe` ile npm `.cmd`/`.ps1`
   shim'lerini ve execution-policy korumalı sürüm doğrulamasını destekleyecek biçimde düzeltildi.
-- Ayrıntılar `V0.8_CHANGELOG.md` ve `docs/provider-compatibility.md` dosyalarındadır.
+- Ayrıntılar `docs/history/V0.8_CHANGELOG.md` ve `docs/provider-compatibility.md` dosyalarındadır.
 
 ## 0.7.0 — 2026-10-16
 

@@ -1,6 +1,6 @@
 # MT Developer DNA
 
-[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/dangermtster-beep/MT-Developer-DNA/releases)
+[![Version](https://img.shields.io/badge/version-v0.8.1-blue.svg)](https://github.com/dangermtster-beep/MT-Developer-DNA/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-1.81%2B-orange.svg)](https://www.rust-lang.org/)
 
@@ -81,6 +81,21 @@ Invocation after installation depends on the provider: Codex uses
 `$mt-developer-dna`; the verified slash-capable adapters expose
 `/mt-developer-dna`. Run `dna-cli doctor` and follow the provider-specific live
 verification steps before treating an integration as accepted.
+
+### Machine-wide setup for every detected provider
+
+```powershell
+cargo install --path crates/dna-cli --locked
+dna-cli deploy sync --profile .\profiles\universal.json --provider all --scope global
+dna-cli deploy sync --profile .\profiles\universal.json --provider all --scope global --apply --yes
+dna-cli deploy status --scope global
+```
+
+Global installs are project-independent: the profile's language, UI, and
+database are never written into the global skill. The skill reads the selected
+language from the project's `.mt-dna/project.json` and asks only when none is
+recorded. Each skill is installed together with its `references/` folder, and
+npm-installed Codex and OpenCode (`.cmd`/`.ps1` shims) are detected.
 
 ## Universal Language Profile
 

@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$Version = '0.8.0'
+$Version = '0.8.1'
 $PackageName = "mt-developer-dna-v$Version-windows-x86_64"
 $StagingRoot = Join-Path $ProjectRoot 'release-staging'
 $PackageRoot = Join-Path $StagingRoot $PackageName
@@ -40,12 +40,12 @@ New-Item -ItemType Directory -Path $DistRoot -Force | Out-Null
 
 Copy-Item -LiteralPath $Binary -Destination (Join-Path $PackageRoot 'dna-cli.exe')
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'profiles\universal.json') -Destination (Join-Path $PackageRoot 'profiles\universal.json')
-Copy-Item -LiteralPath (Join-Path $ProjectRoot 'mt-developer-dna\SKILL.md') -Destination (Join-Path $PackageRoot 'mt-developer-dna\SKILL.md')
+# SKILL.md provider'a göre `dna-cli deploy` ile üretilir; pakette yalnız referans kaynağı bulunur.
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'mt-developer-dna\references') -Destination (Join-Path $PackageRoot 'mt-developer-dna\references') -Recurse
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\INSTALL.md') -Destination (Join-Path $PackageRoot 'docs\INSTALL.md')
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\PROVIDERS.md') -Destination (Join-Path $PackageRoot 'docs\PROVIDERS.md')
-Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\RELEASE_NOTES_v0.8.0.md') -Destination (Join-Path $PackageRoot 'RELEASE_NOTES.md')
-Copy-Item -LiteralPath (Join-Path $ProjectRoot 'reports\v0.8.0-public-release-validation.md') -Destination (Join-Path $PackageRoot 'PUBLIC_RELEASE_VALIDATION.md')
+Copy-Item -LiteralPath (Join-Path $ProjectRoot "docs\RELEASE_NOTES_v$Version.md") -Destination (Join-Path $PackageRoot 'RELEASE_NOTES.md')
+Copy-Item -LiteralPath (Join-Path $ProjectRoot "reports\v$Version-validation.md") -Destination (Join-Path $PackageRoot 'PUBLIC_RELEASE_VALIDATION.md')
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'README_TR.md') -Destination (Join-Path $PackageRoot 'README_TR.md')
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'LICENSE') -Destination (Join-Path $PackageRoot 'LICENSE')
 

@@ -13,7 +13,7 @@ Canonical repository:
 https://github.com/dangermtster-beep/MT-Developer-DNA
 
 Kullanıcı Releases sayfasından mevcut sürümü ve asset SHA-256 değerini kontrol
-eder, paketi kendisi indirir ve dry-run planını inceler. v0.8.0 kullanıcı onayı
+eder, paketi kendisi indirir ve dry-run planını inceler. MT Developer DNA kullanıcı onayı
 olmadan GitHub'a bağlanıp indirme, kurulum veya provider dosyası güncellemesi yapmaz.
 
 ```powershell

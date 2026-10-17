@@ -1,6 +1,6 @@
 # Provider uyumluluğu
 
-Bu matris v0.8.0 renderer ve deployment sözleşmesini gösterir. “Destekleniyor”
+Bu matris v0.8.1 renderer ve deployment sözleşmesini gösterir. “Destekleniyor”
 ifadesi canlı model oturumunun bu makinede kabul testinden geçtiği anlamına gelmez.
 
 | Provider | Project skill | Global skill | Çağrı | Discovery / sınır |
