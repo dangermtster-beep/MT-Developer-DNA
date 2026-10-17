@@ -98,6 +98,24 @@ pub fn provider_descriptor(provider: Provider) -> &'static ProviderDescriptor {
         .expect("provider registry eksiksiz olmalı")
 }
 
+/// Proje skill klasöründeki bir dosyayı (SKILL.md veya references/...) hedef skill
+/// klasörüne taşır. Dosya skill klasörüne ait değilse `None` döner.
+pub fn remap_skill_file(
+    project_path: &str,
+    project_skill_path: &str,
+    target_skill_path: &str,
+) -> Option<String> {
+    if project_path == project_skill_path {
+        return Some(target_skill_path.to_owned());
+    }
+    let project_dir = project_skill_path.strip_suffix("SKILL.md")?;
+    let target_dir = target_skill_path.strip_suffix("SKILL.md")?;
+    project_path
+        .strip_prefix(project_dir)
+        .filter(|rest| !rest.is_empty())
+        .map(|rest| format!("{target_dir}{rest}"))
+}
+
 pub fn deployment_relative_path(
     provider: Provider,
     project_path: &str,
@@ -107,8 +125,12 @@ pub fn deployment_relative_path(
         return Some(project_path.to_owned());
     }
     let descriptor = provider_descriptor(provider);
-    if project_path == descriptor.project_skill_path {
-        return Some(descriptor.global_skill_path.to_owned());
+    if let Some(path) = remap_skill_file(
+        project_path,
+        descriptor.project_skill_path,
+        descriptor.global_skill_path,
+    ) {
+        return Some(path);
     }
     if provider == Provider::Gemini && project_path == ".gemini/commands/mt-developer-dna.toml" {
         return Some(project_path.to_owned());
@@ -285,22 +307,104 @@ impl ReportRenderer {
 /// skill gövdesinde ve proje hafızasında taşınır.
 pub const SKILL_DESCRIPTION: &str = "Plan, implement, review, test, secure, optimize, and prepare software projects for release in any programming language, preserving the user's chosen language, Turkish user interface, and existing architecture.";
 
+/// Skill ile birlikte dağıtılan referans dosyaları: (dosya, ne zaman okunur, içerik).
+/// Tek kaynak `mt-developer-dna/references/` klasörüdür; içerik derleme anında gömülür.
+pub const SKILL_REFERENCES: [(&str, &str, &str); 13] = [
+    (
+        "modes.md",
+        "PLAN/BUILD/REVIEW yönlendirmesi, plan, uygulama ve inceleme öncesinde",
+        include_str!("../../../mt-developer-dna/references/modes.md"),
+    ),
+    (
+        "standards.md",
+        "mimari, kalite, güvenlik ve performans standartları",
+        include_str!("../../../mt-developer-dna/references/standards.md"),
+    ),
+    (
+        "quality.md",
+        "`test`, `quality`, `performance`, `security`, `release-check` komutlarından önce",
+        include_str!("../../../mt-developer-dna/references/quality.md"),
+    ),
+    (
+        "optimization.md",
+        "`optimize`, `fix`, `optimization-report` ve rollback öncesinde",
+        include_str!("../../../mt-developer-dna/references/optimization.md"),
+    ),
+    (
+        "project-memory.md",
+        "`.mt-dna/` hafıza işlemleri: `init`, `resume`, `update`, `handoff`, `memory check/repair`",
+        include_str!("../../../mt-developer-dna/references/project-memory.md"),
+    ),
+    (
+        "deployment.md",
+        "provider kurulum, senkronizasyon ve Doctor istekleri",
+        include_str!("../../../mt-developer-dna/references/deployment.md"),
+    ),
+    (
+        "languages/cpp.json",
+        "C++ derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/cpp.json"),
+    ),
+    (
+        "languages/csharp.json",
+        "C# derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/csharp.json"),
+    ),
+    (
+        "languages/go.json",
+        "Go derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/go.json"),
+    ),
+    (
+        "languages/java.json",
+        "Java derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/java.json"),
+    ),
+    (
+        "languages/python.json",
+        "Python derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/python.json"),
+    ),
+    (
+        "languages/rust.json",
+        "Rust derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/rust.json"),
+    ),
+    (
+        "languages/typescript.json",
+        "TypeScript derleme/test/release komutları ve ilkeleri",
+        include_str!("../../../mt-developer-dna/references/languages/typescript.json"),
+    ),
+];
+
 pub fn render_package(
     profile: &Profile,
     provider: Provider,
 ) -> Result<ProviderPackage, RenderError> {
     profile.validate()?;
     let adapter = adapters::adapter_for(provider);
+    let skill_path = adapter.skill_path();
+    let skill_dir = skill_path
+        .strip_suffix("/SKILL.md")
+        .expect("skill yolu SKILL.md ile bitmelidir");
     let mut files = vec![
         RenderedFile {
             relative_path: adapter.primary_path().to_owned(),
             contents: render_primary_document(profile, adapter),
         },
         RenderedFile {
-            relative_path: adapter.skill_path().to_owned(),
+            relative_path: skill_path.to_owned(),
             contents: render_skill(profile, adapter),
         },
     ];
+    files.extend(
+        SKILL_REFERENCES
+            .iter()
+            .map(|(name, _, contents)| RenderedFile {
+                relative_path: format!("{skill_dir}/references/{name}"),
+                contents: (*contents).to_owned(),
+            }),
+    );
     files.extend(adapter.additional_files());
 
     files.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
@@ -384,6 +488,7 @@ fn render_skill(profile: &Profile, adapter: &dyn adapters::ProviderAdapter) -> S
     )
     .unwrap();
     writeln!(output).unwrap();
+    render_reference_index(&mut output);
     render_modes(&mut output, adapter);
     render_quality_system(&mut output, adapter);
     render_optimization_system(&mut output, adapter);
@@ -392,6 +497,21 @@ fn render_skill(profile: &Profile, adapter: &dyn adapters::ProviderAdapter) -> S
     render_project_memory(&mut output, adapter);
     render_standards(&mut output, profile);
     output
+}
+
+fn render_reference_index(output: &mut String) {
+    writeln!(output, "## Referanslar").unwrap();
+    writeln!(output).unwrap();
+    writeln!(output, "Ayrıntılı sözleşmeler bu skill klasöründeki `references/` altındadır. Yalnız etkin işlem için gereken dosyayı oku:").unwrap();
+    writeln!(output).unwrap();
+    for (name, purpose, _) in SKILL_REFERENCES {
+        writeln!(
+            output,
+            "- [`references/{name}`](references/{name}): {purpose}"
+        )
+        .unwrap();
+    }
+    writeln!(output).unwrap();
 }
 
 fn render_modes(output: &mut String, adapter: &dyn adapters::ProviderAdapter) {
@@ -479,7 +599,8 @@ fn render_required_workflow(output: &mut String, profile: &Profile) {
         profile.language,
         dna_core::ProgrammingLanguage::Auto | dna_core::ProgrammingLanguage::AskUser
     ) {
-        writeln!(output, "- Programlama dili seçilmedi. Uygun seçenekleri sun, kullanıcıya sor ve açık seçim yapılmadan kod üretme.").unwrap();
+        writeln!(output, "- Dil seçimi önce proje hafızasından gelir: proje kökünde `.mt-dna/project.json` varsa `language` alanını oku, kayıtlı dili aynen koru ve tekrar sorma.").unwrap();
+        writeln!(output, "- Programlama dili seçilmedi ve hafızada kayıt yoksa: uygun seçenekleri sun, kullanıcıya sor ve açık seçim yapılmadan kod üretme. Seçimden sonra dili `.mt-dna/` hafızasına kaydetmeyi öner; yazmadan önce önizleme göster ve açık onay al.").unwrap();
     } else {
         writeln!(
             output,

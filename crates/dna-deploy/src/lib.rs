@@ -1,4 +1,6 @@
-use dna_render::{deployment_relative_path, Provider, ProviderPackage, RenderedFile};
+use dna_render::{
+    deployment_relative_path, remap_skill_file, Provider, ProviderPackage, RenderedFile,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::env;
@@ -933,12 +935,14 @@ fn deployable_files<'a>(
         .files
         .iter()
         .filter_map(|file| {
-            let path = if scope == InstallScope::Global
-                && file.relative_path == descriptor.project_skill_path
-            {
-                global_skill_path.map(ToOwned::to_owned).or_else(|| {
-                    deployment_relative_path(package.provider, &file.relative_path, true)
-                })
+            let override_path = global_skill_path.filter(|_| scope == InstallScope::Global);
+            let path = if let Some(target_skill_path) = override_path {
+                remap_skill_file(
+                    &file.relative_path,
+                    descriptor.project_skill_path,
+                    target_skill_path,
+                )
+                .or_else(|| deployment_relative_path(package.provider, &file.relative_path, true))
             } else {
                 deployment_relative_path(
                     package.provider,
@@ -1890,11 +1894,37 @@ mod tests {
         .unwrap();
         let package = dna_render::render_package(&profile, Provider::Antigravity).unwrap();
         let plan = plan_install(&root, &package, InstallScope::Global).unwrap();
-        assert_eq!(plan.changes.len(), 1);
+        assert_eq!(plan.changes.len(), 1 + dna_render::SKILL_REFERENCES.len());
         assert_eq!(
             plan.changes[0].path,
             ".gemini/config/skills/mt-developer-dna/SKILL.md"
         );
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn global_skill_path_override_moves_references_with_the_skill() {
+        let root = temp_root("references-override");
+        let profile = dna_core::Profile::load(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../profiles/universal.json"),
+        )
+        .unwrap();
+        let package = dna_render::render_package(&profile, Provider::Antigravity).unwrap();
+        let override_path = ".gemini/antigravity-cli/skills/mt-developer-dna/SKILL.md";
+        let plan = plan_install_with_global_skill_path(
+            &root,
+            &package,
+            InstallScope::Global,
+            Some(override_path),
+        )
+        .unwrap();
+
+        assert_eq!(plan.changes.len(), 1 + dna_render::SKILL_REFERENCES.len());
+        assert!(plan.changes.iter().all(|change| change
+            .path
+            .starts_with(".gemini/antigravity-cli/skills/mt-developer-dna/")));
+        assert!(plan.changes.iter().any(|change| change.path
+            == ".gemini/antigravity-cli/skills/mt-developer-dna/references/languages/csharp.json"));
         let _ = fs::remove_dir_all(root);
     }
 
@@ -2074,7 +2104,7 @@ mod tests {
             .any(|item| item.path == ".clinerules/mt-developer-dna.md"));
 
         let global = plan_install(&root, &package, InstallScope::Global).unwrap();
-        assert_eq!(global.changes.len(), 1);
+        assert_eq!(global.changes.len(), 1 + dna_render::SKILL_REFERENCES.len());
         assert_eq!(
             global.changes[0].path,
             ".cline/skills/mt-developer-dna/SKILL.md"
@@ -2198,7 +2228,7 @@ mod tests {
             .any(|item| item.path == ".opencode/skills/mt-developer-dna/SKILL.md"));
 
         let global = plan_install(&root, &package, InstallScope::Global).unwrap();
-        assert_eq!(global.changes.len(), 1);
+        assert_eq!(global.changes.len(), 1 + dna_render::SKILL_REFERENCES.len());
         assert_eq!(
             global.changes[0].path,
             ".config/opencode/skills/mt-developer-dna/SKILL.md"

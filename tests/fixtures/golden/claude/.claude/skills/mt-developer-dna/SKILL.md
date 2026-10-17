@@ -16,6 +16,24 @@ Bu skill Claude Code için üretilmiştir. Çağırma biçimi: `/mt-developer-dn
 5. İlgili testleri, güvenlik kontrollerini ve release derlemesini çalıştır.
 6. Sonucu; değişiklikleri, gerçek doğrulama kanıtını ve sınırlamalarıyla raporla.
 
+## Referanslar
+
+Ayrıntılı sözleşmeler bu skill klasöründeki `references/` altındadır. Yalnız etkin işlem için gereken dosyayı oku:
+
+- [`references/modes.md`](references/modes.md): PLAN/BUILD/REVIEW yönlendirmesi, plan, uygulama ve inceleme öncesinde
+- [`references/standards.md`](references/standards.md): mimari, kalite, güvenlik ve performans standartları
+- [`references/quality.md`](references/quality.md): `test`, `quality`, `performance`, `security`, `release-check` komutlarından önce
+- [`references/optimization.md`](references/optimization.md): `optimize`, `fix`, `optimization-report` ve rollback öncesinde
+- [`references/project-memory.md`](references/project-memory.md): `.mt-dna/` hafıza işlemleri: `init`, `resume`, `update`, `handoff`, `memory check/repair`
+- [`references/deployment.md`](references/deployment.md): provider kurulum, senkronizasyon ve Doctor istekleri
+- [`references/languages/cpp.json`](references/languages/cpp.json): C++ derleme/test/release komutları ve ilkeleri
+- [`references/languages/csharp.json`](references/languages/csharp.json): C# derleme/test/release komutları ve ilkeleri
+- [`references/languages/go.json`](references/languages/go.json): Go derleme/test/release komutları ve ilkeleri
+- [`references/languages/java.json`](references/languages/java.json): Java derleme/test/release komutları ve ilkeleri
+- [`references/languages/python.json`](references/languages/python.json): Python derleme/test/release komutları ve ilkeleri
+- [`references/languages/rust.json`](references/languages/rust.json): Rust derleme/test/release komutları ve ilkeleri
+- [`references/languages/typescript.json`](references/languages/typescript.json): TypeScript derleme/test/release komutları ve ilkeleri
+
 ## PLAN, BUILD ve REVIEW modları
 
 - `PLAN`: projeyi sınırlı ve ignore-aware tara; gereksinim, mimari, görev bağımlılıkları ve doğrulama komutları üret. Varsayılan olarak kaynak veya hafıza yazma.

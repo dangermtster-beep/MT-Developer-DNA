@@ -1,19 +1,18 @@
-use dna_core::{validate_skill_manifest, LanguageProfile};
+use dna_core::LanguageProfile;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
+// SKILL.md artık yalnızca dna-render tarafından üretilir (bkz. dna-render golden
+// testleri); bu klasör skill ile dağıtılan references/ kaynağıdır.
 fn skill_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../mt-developer-dna")
 }
 
 #[test]
-fn canonical_skill_manifest_is_valid() {
-    let source = fs::read_to_string(skill_root().join("SKILL.md")).unwrap();
-    let manifest = validate_skill_manifest(&source, "mt-developer-dna").unwrap();
-    assert_eq!(manifest.name, "mt-developer-dna");
-    assert!(!manifest.description.trim().is_empty());
-    assert!(manifest.description.len() <= 1024);
+fn skill_source_folder_holds_only_references() {
+    assert!(!skill_root().join("SKILL.md").exists());
+    assert!(skill_root().join("references/modes.md").is_file());
 }
 
 #[test]

@@ -48,15 +48,22 @@ fn install_is_idempotent_and_keeps_unrelated_files() {
     let root = temporary_project("idempotent");
     fs::write(root.join("keep.txt"), "koru").unwrap();
 
+    // AGENTS.md + SKILL.md + skill ile dağıtılan references/ dosyaları.
+    let file_count = codex_package().files.len();
+    assert!(file_count > 2, "references/ pakete dahil olmalı");
+
     let first_plan = plan_install(&root, &[codex_package()]).unwrap();
     let first = apply_install(&first_plan).unwrap();
-    assert_eq!(first.changed, 2);
+    assert_eq!(first.changed, file_count);
     assert!(first.backup_id.is_some());
+    assert!(root
+        .join(".agents/skills/mt-developer-dna/references/modes.md")
+        .exists());
 
     let second_plan = plan_install(&root, &[codex_package()]).unwrap();
     let second = apply_install(&second_plan).unwrap();
     assert_eq!(second.changed, 0);
-    assert_eq!(second.unchanged, 2);
+    assert_eq!(second.unchanged, file_count);
     assert!(second.backup_id.is_none());
     assert_eq!(fs::read_to_string(root.join("keep.txt")).unwrap(), "koru");
     fs::remove_dir_all(root).unwrap();
@@ -85,7 +92,8 @@ fn existing_file_is_backed_up_and_rollback_restores_it() {
 
     let rollback = rollback_install(&root, &backup_id).unwrap();
     assert_eq!(rollback.restored, 1);
-    assert_eq!(rollback.removed, 1);
+    // AGENTS.md geri yüklenir; yeni oluşturulan diğer tüm dosyalar kaldırılır.
+    assert_eq!(rollback.removed, codex_package().files.len() - 1);
     assert_eq!(
         fs::read_to_string(root.join("AGENTS.md")).unwrap(),
         "kullanıcının özgün dosyası\n"

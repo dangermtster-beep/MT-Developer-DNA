@@ -56,9 +56,17 @@ kabul edilmez. Tarama ihtiyaç anında ve sınırlıdır; watcher/polling veya G
 
 ## Skill paketi
 
-Canonical `mt-developer-dna/SKILL.md` kısa yönlendirme ve karar kurallarını taşır.
-Ayrıntılı standartlar ve dil profilleri yalnızca gerektiğinde okunmak üzere
-`references/` altındadır. Bu yapı gereksiz bağlam ve bellek tüketimini azaltır.
+Her provider'ın `SKILL.md` dosyası `dna-render` tarafından profilden
+deterministik olarak üretilir; elle yazılmış ikinci bir kopya yoktur. Ayrıntılı
+sözleşmeler ve dil profilleri tek kaynak olan `mt-developer-dna/references/`
+klasöründedir, derleme anında gömülür ve kurulumda skill klasörünün yanına
+`references/` olarak yazılır (global kurulumda da). Üretilen skill bu dosyalara
+bağlantı verir ve yalnızca etkin işlem için gerekeni okutur; bu yapı gereksiz
+bağlam ve bellek tüketimini azaltır.
+
+Global kurulum projeden bağımsızdır: profil dil, arayüz ve veritabanı seçimi
+global skill'e yazılmaz. Skill seçili dili önce `.mt-dna/project.json` içinden
+okur, kayıt yoksa kullanıcıya sorar.
 
 ## Provider adapter sözleşmesi
 

@@ -1,7 +1,7 @@
 use dna_core::{validate_skill_manifest, Profile};
 use dna_render::{
-    provider_descriptor, render_package, CapabilityState, Provider, PROVIDER_REGISTRY,
-    SKILL_DESCRIPTION,
+    provider_descriptor, remap_skill_file, render_package, CapabilityState, Provider,
+    PROVIDER_REGISTRY, SKILL_DESCRIPTION, SKILL_REFERENCES,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -20,7 +20,12 @@ fn all_provider_outputs_match_golden_files() {
         let second = render_package(&profile, provider).unwrap();
         assert_eq!(first, second, "çıktı deterministik olmalı");
 
-        for file in first.files {
+        // references/ kaynağıyla birebir aynıdır; ayrı testte doğrulanır.
+        for file in first
+            .files
+            .into_iter()
+            .filter(|file| !file.relative_path.contains("/references/"))
+        {
             let expected_path = fixture_root
                 .join("golden")
                 .join(provider.directory_name())
@@ -44,7 +49,9 @@ fn selected_language_is_preserved_for_every_provider() {
         assert!(package
             .files
             .iter()
-            .filter(|file| file.relative_path.ends_with(".md"))
+            // Paylaşılan references/ dosyaları dilden bağımsızdır.
+            .filter(|file| file.relative_path.ends_with(".md")
+                && !file.relative_path.contains("/references/"))
             .all(|file| file.contents.contains("Rust")));
     }
 }
@@ -192,6 +199,61 @@ fn every_provider_reads_the_same_project_memory_contract() {
         assert!(combined.contains("user-modified/conflict"));
         assert!(combined.contains("PASS, WARN, FAIL, NOT_RUN ve UNSUPPORTED"));
     }
+}
+
+#[test]
+fn every_package_ships_references_next_to_its_skill() {
+    let profile = Profile::load(fixture_root().join("../../profiles/universal.json")).unwrap();
+    for provider in Provider::ALL {
+        let package = render_package(&profile, provider).unwrap();
+        let skill_path = provider_descriptor(provider).project_skill_path;
+        let skill_dir = skill_path.strip_suffix("SKILL.md").unwrap();
+        let skill = package
+            .files
+            .iter()
+            .find(|file| file.relative_path == skill_path)
+            .unwrap();
+
+        for (name, _, contents) in SKILL_REFERENCES {
+            let expected_path = format!("{skill_dir}references/{name}");
+            let file = package
+                .files
+                .iter()
+                .find(|file| file.relative_path == expected_path)
+                .unwrap_or_else(|| panic!("{expected_path} pakette olmalı"));
+            assert_eq!(file.contents, contents);
+            assert!(!contents.trim().is_empty(), "{name} boş olmamalı");
+            assert!(
+                skill.contents.contains(&format!("(references/{name})")),
+                "SKILL.md {name} dosyasına bağlantı vermeli"
+            );
+        }
+        assert!(skill.contents.contains(".mt-dna/project.json"));
+    }
+}
+
+#[test]
+fn remap_skill_file_maps_skill_and_references_only() {
+    let project = ".claude/skills/mt-developer-dna/SKILL.md";
+    let target = "custom/skills/mt-developer-dna/SKILL.md";
+    assert_eq!(
+        remap_skill_file(project, project, target).as_deref(),
+        Some(target)
+    );
+    assert_eq!(
+        remap_skill_file(
+            ".claude/skills/mt-developer-dna/references/modes.md",
+            project,
+            target
+        )
+        .as_deref(),
+        Some("custom/skills/mt-developer-dna/references/modes.md")
+    );
+    assert_eq!(remap_skill_file("CLAUDE.md", project, target), None);
+    assert_eq!(
+        remap_skill_file(".claude/skills/mt-developer-dna/", project, target),
+        None
+    );
 }
 
 #[test]
