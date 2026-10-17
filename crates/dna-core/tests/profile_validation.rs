@@ -10,6 +10,26 @@ fn valid_json_profile_is_loaded() {
 }
 
 #[test]
+fn global_scope_profile_drops_project_choices_and_stays_valid() {
+    let profile = Profile::from_json_str(VALID_PROFILE).unwrap();
+    assert!(!profile.is_global_neutral());
+
+    let global = profile.for_global_scope();
+    assert!(global.is_global_neutral());
+    assert_eq!(
+        global.language.display_name(),
+        "Kullanıcı seçimi bekleniyor"
+    );
+    assert_eq!(global.ui.display_name(), "Auto");
+    assert_eq!(global.name, profile.name);
+    assert_eq!(global.features, profile.features);
+    assert_eq!(global.standards, profile.standards);
+    global
+        .validate()
+        .expect("nötr global profil geçerli olmalı");
+}
+
+#[test]
 fn incompatible_ui_is_reported_with_alternatives() {
     let json = VALID_PROFILE.replace("\"Slint\"", "\"Wpf\"");
     let error = Profile::from_json_str(&json).expect_err("uyumsuz UI reddedilmeli");

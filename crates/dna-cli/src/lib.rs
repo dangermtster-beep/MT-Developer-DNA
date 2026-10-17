@@ -1583,8 +1583,9 @@ fn execute_deployment_plan(
             "--provider-path yalnızca tek bir --provider seçimiyle kullanılabilir.".to_owned(),
         ));
     }
-    let profile = Profile::load(&args.profile)?;
+    let loaded = Profile::load(&args.profile)?;
     let scope: InstallScope = args.scope.into();
+    let (profile, scope_note) = profile_for_scope(loaded, scope);
     let root = resolve_target_root(scope, &args.path)?;
     let detections = if args.provider == ProviderSelection::All {
         detect_all()
@@ -1622,6 +1623,9 @@ fn execute_deployment_plan(
     }
 
     let mut output = String::new();
+    if let Some(note) = scope_note {
+        output.push_str(note);
+    }
     for provider in providers {
         let detection = detections
             .iter()
@@ -1649,6 +1653,16 @@ fn execute_deployment_plan(
         );
     }
     Ok(output)
+}
+
+const GLOBAL_SCOPE_NOTE: &str = "BİLGİ: Global kurulum projeden bağımsızdır; profildeki dil, arayüz ve veritabanı seçimi global skill'e yazılmadı. Dil her projede kullanıcıya sorulur ve `.mt-dna/` hafızasında tutulur.\n";
+
+/// Global scope'ta profil nötrlenir; nötrleme olduysa kullanıcıya gösterilecek notu döndürür.
+fn profile_for_scope(profile: Profile, scope: InstallScope) -> (Profile, Option<&'static str>) {
+    if scope != InstallScope::Global || profile.is_global_neutral() {
+        return (profile, None);
+    }
+    (profile.for_global_scope(), Some(GLOBAL_SCOPE_NOTE))
 }
 
 fn run_doctor(
@@ -1812,8 +1826,10 @@ fn write_new_file(path: &Path, contents: &[u8]) -> Result<(), CliError> {
 
 #[cfg(test)]
 mod tests {
-    use super::Cli;
+    use super::{profile_for_scope, Cli, InstallScope, Profile};
     use clap::{CommandFactory, Parser};
+    use dna_core::ProgrammingLanguage;
+    use dna_render::{render_package, Provider};
 
     #[test]
     fn cli_argument_definition_has_no_conflicts() {
@@ -1900,5 +1916,56 @@ mod tests {
         ] {
             Cli::try_parse_from(args).expect("V0.8 komut biçimi parse edilmeli");
         }
+    }
+
+    fn workspace_profile(relative: &str) -> Profile {
+        Profile::load(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .join(relative),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn global_scope_neutralizes_language_specific_profile() {
+        let rust = workspace_profile("tests/fixtures/profile-rust.json");
+        let (profile, note) = profile_for_scope(rust.clone(), InstallScope::Global);
+
+        assert_eq!(profile.language, ProgrammingLanguage::AskUser);
+        assert!(profile.is_global_neutral());
+        assert_eq!(profile.name, rust.name);
+        assert_eq!(profile.standards, rust.standards);
+        assert!(note.is_some(), "nötrleme kullanıcıya bildirilmeli");
+
+        for provider in Provider::ALL {
+            let package = render_package(&profile, provider).unwrap();
+            let combined = package
+                .files
+                .iter()
+                .map(|file| file.contents.as_str())
+                .collect::<String>();
+            assert!(!combined.contains("aynen koru: Rust"));
+            assert!(combined.contains("Programlama dili seçilmedi"));
+        }
+    }
+
+    #[test]
+    fn project_scope_keeps_selected_language() {
+        let rust = workspace_profile("tests/fixtures/profile-rust.json");
+        let (profile, note) = profile_for_scope(rust.clone(), InstallScope::Project);
+
+        assert_eq!(profile, rust);
+        assert!(note.is_none());
+    }
+
+    #[test]
+    fn already_neutral_global_profile_is_left_untouched() {
+        let universal = workspace_profile("profiles/universal.json");
+        let (profile, note) = profile_for_scope(universal.clone(), InstallScope::Global);
+
+        assert!(universal.is_global_neutral());
+        assert_eq!(profile, universal);
+        assert!(note.is_none());
     }
 }

@@ -1,6 +1,6 @@
 ---
 name: mt-developer-dna
-description: Plan, implement, test, secure, document, and prepare Rust software projects for release while preserving the user's language choice and existing architecture.
+description: Plan, implement, review, test, secure, optimize, and prepare software projects for release in any programming language, preserving the user's chosen language, Turkish user interface, and existing architecture.
 ---
 
 # MT Developer DNA

@@ -43,6 +43,23 @@ impl Profile {
             Err(ValidationErrors(issues))
         }
     }
+
+    /// Global kurulum projeden bağımsızdır; proje dili, arayüzü ve veritabanı
+    /// global skill'e gömülmez. Dil seçimi her projede kullanıcıya sorulur.
+    pub fn for_global_scope(&self) -> Self {
+        Self {
+            language: ProgrammingLanguage::AskUser,
+            ui: UiFramework::Auto,
+            database: Database::Auto,
+            ..self.clone()
+        }
+    }
+
+    pub fn is_global_neutral(&self) -> bool {
+        self.language == ProgrammingLanguage::AskUser
+            && self.ui == UiFramework::Auto
+            && self.database == Database::Auto
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

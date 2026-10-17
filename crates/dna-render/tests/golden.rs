@@ -1,6 +1,7 @@
 use dna_core::{validate_skill_manifest, Profile};
 use dna_render::{
     provider_descriptor, render_package, CapabilityState, Provider, PROVIDER_REGISTRY,
+    SKILL_DESCRIPTION,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -190,5 +191,41 @@ fn every_provider_reads_the_same_project_memory_contract() {
         assert!(combined.contains("V0.7 Universal Plugin Deployment"));
         assert!(combined.contains("user-modified/conflict"));
         assert!(combined.contains("PASS, WARN, FAIL, NOT_RUN ve UNSUPPORTED"));
+    }
+}
+
+#[test]
+fn skill_description_is_language_independent_for_every_profile_and_provider() {
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let profiles = [
+        Profile::load(workspace.join("tests/fixtures/profile-rust.json")).unwrap(),
+        Profile::load(workspace.join("profiles/universal.json")).unwrap(),
+    ];
+    let expected_line = format!("description: {SKILL_DESCRIPTION}");
+
+    for profile in &profiles {
+        for provider in Provider::ALL {
+            let package = render_package(profile, provider).unwrap();
+            let skill = package
+                .files
+                .iter()
+                .find(|file| file.relative_path.ends_with("SKILL.md"))
+                .unwrap_or_else(|| panic!("{} için SKILL.md üretilmeli", provider.display_name()));
+            let description = skill
+                .contents
+                .lines()
+                .find(|line| line.starts_with("description:"))
+                .expect("frontmatter description satırı olmalı");
+
+            assert_eq!(description, expected_line);
+            assert!(
+                !description.contains(profile.language.display_name()),
+                "açıklama profil dilini içermemeli: {description}"
+            );
+            assert!(
+                description.is_ascii(),
+                "açıklamaya Türkçe yer tutucu sızmamalı: {description}"
+            );
+        }
     }
 }

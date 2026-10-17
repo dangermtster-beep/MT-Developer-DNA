@@ -281,6 +281,10 @@ impl ReportRenderer {
     }
 }
 
+/// Skill keşfinde kullanılan açıklama. Profil dilinden bağımsızdır; dil seçimi
+/// skill gövdesinde ve proje hafızasında taşınır.
+pub const SKILL_DESCRIPTION: &str = "Plan, implement, review, test, secure, optimize, and prepare software projects for release in any programming language, preserving the user's chosen language, Turkish user interface, and existing architecture.";
+
 pub fn render_package(
     profile: &Profile,
     provider: Provider,
@@ -342,12 +346,7 @@ fn render_skill(profile: &Profile, adapter: &dyn adapters::ProviderAdapter) -> S
     let mut output = String::new();
     writeln!(output, "---").unwrap();
     writeln!(output, "name: mt-developer-dna").unwrap();
-    writeln!(
-        output,
-        "description: Plan, implement, test, secure, document, and prepare {} software projects for release while preserving the user's language choice and existing architecture.",
-        profile.language.display_name()
-    )
-    .unwrap();
+    writeln!(output, "description: {SKILL_DESCRIPTION}").unwrap();
     if adapter.provider() == Provider::OpenCode {
         writeln!(output, "metadata:").unwrap();
         writeln!(output, "  opencode/slash: \"true\"").unwrap();
